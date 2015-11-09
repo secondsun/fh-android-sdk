@@ -50,7 +50,7 @@ public class FHRemoteTest extends AndroidTestCase {
         FHTestUtils.injectInto(fhRemote, httpClient);
         FHActCallback callback = mock(FHActCallback.class);
         
-        fhRemote.execute(callback);
+        fhRemote.executeAsync(callback);
         
         verify(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), eq(new JSONObject()), eq(callback), eq(false));
         
@@ -61,7 +61,7 @@ public class FHRemoteTest extends AndroidTestCase {
         FHTestUtils.injectInto(fhRemote, httpClient);
         FHActCallback callback = mock(FHActCallback.class);
         fhRemote.setCallback(callback);
-        fhRemote.execute();
+        fhRemote.executeAsync();
         
         verify(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), eq(new JSONObject()), eq(callback), eq(false));
         
@@ -77,7 +77,7 @@ public class FHRemoteTest extends AndroidTestCase {
         fhRemote.setCallback(callback);
         
         try {
-            fhRemote.execute();
+            fhRemote.executeAsync();
         } catch(Exception compare) {
             assertEquals(stubException, compare);
             return;
@@ -94,7 +94,7 @@ public class FHRemoteTest extends AndroidTestCase {
         Mockito.doThrow(stubException).when(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), eq(new JSONObject()), eq(callback), eq(false));
         
         try {
-            fhRemote.execute(callback);
+            fhRemote.executeAsync(callback);
         } catch(Exception compare) {
             assertEquals(stubException, compare);
             return;
