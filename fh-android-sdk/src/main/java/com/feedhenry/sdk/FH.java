@@ -37,7 +37,6 @@ import org.jboss.aerogear.android.unifiedpush.RegistrarManager;
 import org.jboss.aerogear.android.unifiedpush.gcm.AeroGearGCMPushConfiguration;
 import org.jboss.aerogear.android.unifiedpush.gcm.AeroGearGCMPushRegistrar;
 import org.jboss.aerogear.android.unifiedpush.metrics.UnifiedPushMetricsMessage;
-import org.json.fh.JSONObject;
 
 /**
  * The FH class provides static methods to initialize the library, create new instances of all the
@@ -150,7 +149,7 @@ public class FH {
                     public void success(FHResponse pResponse) {
                         mReady = true;
                         FHLog.v(LOG_TAG, "FH init response = " + pResponse.getJson().toString());
-                        JSONObject cloudProps = pResponse.getJson();
+                        org.json.JSONObject cloudProps = pResponse.getResults();
                         CloudProps.init(cloudProps);
                         CloudProps.getInstance().save();
                         if (cb != null) {
@@ -236,13 +235,27 @@ public class FH {
      * @return an instance of FHActRequest
      * @throws FHNotReadyException
      */
-    public static FHActRequest buildActRequest(String pRemoteAction, JSONObject pParams) throws FHNotReadyException {
+    public static FHActRequest buildActRequest(String pRemoteAction, org.json.fh.JSONObject pParams) throws FHNotReadyException {
         FHActRequest request = (FHActRequest) buildAction(FH_API_ACT);
         request.setRemoteAction(pRemoteAction);
         request.setArgs(pParams);
         return request;
     }
 
+    /**
+     * Builds an instance of {@link FHActRequest} to perform an act request.
+     * @param pRemoteAction the name of the cloud side function
+     * @param pParams the parameters for the cloud side function
+     * @return an instance of FHActRequest
+     * @throws FHNotReadyException
+     */
+    public static FHActRequest buildActRequest(String pRemoteAction, org.json.JSONObject pParams) throws FHNotReadyException {
+        FHActRequest request = (FHActRequest) buildAction(FH_API_ACT);
+        request.setRemoteAction(pRemoteAction);
+        request.setArgs(pParams);
+        return request;
+    }
+    
     /**
      * Builds an instance of FHAuthRequest object to perform an authentication request.
      *
@@ -293,8 +306,10 @@ public class FH {
      * @return an instance of FHCloudRequest
      * @throws FHNotReadyException if init has not been called
      * @throws Exception           if pMethod is not one of GET, POST, PUT and DELETE
+     * @deprecated the package org.json.fh is depracated.  Please use {@link #buildCloudRequest(java.lang.String, java.lang.String, cz.msebera.android.httpclient.Header[], org.json.JSONObject) } instead.
      */
-    public static FHCloudRequest buildCloudRequest(String pPath, String pMethod, Header[] pHeaders, JSONObject pParams)
+    @Deprecated
+    public static FHCloudRequest buildCloudRequest(String pPath, String pMethod, Header[] pHeaders, org.json.fh.JSONObject pParams)
         throws Exception {
         FHCloudRequest request = (FHCloudRequest) buildAction(FH_API_CLOUD);
         request.setPath(pPath);
@@ -304,6 +319,28 @@ public class FH {
         return request;
     }
 
+    /**
+     * Builds an instance of FHCloudRequest to call cloud APIs.
+     *
+     * @param pPath    the path of the cloud API
+     * @param pMethod  currently supports GET, POST, PUT and DELETE
+     * @param pHeaders headers need to be set, can be null
+     * @param pParams  the request params, can be null
+     * @return an instance of FHCloudRequest
+     * @throws FHNotReadyException if init has not been called
+     * @throws Exception           if pMethod is not one of GET, POST, PUT and DELETE
+     * 
+     */
+    public static FHCloudRequest buildCloudRequest(String pPath, String pMethod, Header[] pHeaders, org.json.JSONObject pParams)
+        throws Exception {
+        FHCloudRequest request = (FHCloudRequest) buildAction(FH_API_CLOUD);
+        request.setPath(pPath);
+        request.setHeaders(pHeaders);
+        request.setMethod(Methods.parse(pMethod));
+        request.setRequestArgs(pParams);
+        return request;
+    }
+    
     /**
      * Gets the cloud host.
      *
@@ -327,9 +364,9 @@ public class FH {
      * @return a JSONObject contains the default params
      * @throws Exception if the app property file is not loaded
      */
-    public static JSONObject getDefaultParams() throws Exception {
+    public static org.json.JSONObject getDefaultParams2() throws Exception {
         AppProps appProps = AppProps.getInstance();
-        JSONObject defaultParams = new JSONObject();
+        org.json.JSONObject defaultParams = new org.json.JSONObject();
         defaultParams.put("appid", appProps.getAppId());
         defaultParams.put("appkey", appProps.getAppApiKey());
         defaultParams.put("cuid", Device.getDeviceId(mContext));
@@ -346,7 +383,50 @@ public class FH {
         // Load init
         String init = CloudProps.getInitValue();
         if (init != null) {
-            JSONObject initObj = new JSONObject(init);
+            org.json.JSONObject initObj = new org.json.JSONObject(init);
+            defaultParams.put("init", initObj);
+        }
+
+        if (FHAuthSession.exists()) {
+            defaultParams.put(FHAuthSession.SESSION_TOKEN_KEY, FHAuthSession.getToken());
+        }
+
+        return defaultParams;
+    }
+
+    
+    /**
+     * Gets the default params for customised HTTP Requests.
+     * These params will be required to enable app analytics on the FH platform.
+     * You can either add the params to your request body as a JSONObject with the key "__fh", or use the
+     * {@link #getDefaultParamsAsHeaders(Header[]) getDefaultParamsAsHeaders} method to add them as HTTP request
+     * headers.
+     *
+     * @return a JSONObject contains the default params
+     * @throws Exception if the app property file is not loaded
+     * @deprecated the org.json.fh package is deprecated.  Please use {@link #getDefaultParams2() }
+     */
+    @Deprecated
+    public static org.json.fh.JSONObject getDefaultParams() throws Exception {
+        AppProps appProps = AppProps.getInstance();
+        org.json.fh.JSONObject defaultParams = new org.json.fh.JSONObject();
+        defaultParams.put("appid", appProps.getAppId());
+        defaultParams.put("appkey", appProps.getAppApiKey());
+        defaultParams.put("cuid", Device.getDeviceId(mContext));
+        defaultParams.put("destination", "android");
+        defaultParams.put("sdk_version", "FH_ANDROID_SDK/" + FH.VERSION);
+        String projectId = appProps.getProjectId();
+        if (projectId != null && !projectId.isEmpty()) {
+            defaultParams.put("projectid", projectId);
+        }
+        String connectionTag = appProps.getConnectionTag();
+        if (connectionTag != null && !connectionTag.isEmpty()) {
+            defaultParams.put("connectiontag", connectionTag);
+        }
+        // Load init
+        String init = CloudProps.getInitValue();
+        if (init != null) {
+            org.json.fh.JSONObject initObj = new org.json.fh.JSONObject(init);
             defaultParams.put("init", initObj);
         }
 
@@ -365,7 +445,7 @@ public class FH {
      * @throws Exception if the app property file is not loaded
      */
     public static Header[] getDefaultParamsAsHeaders(Header[] pHeaders) throws Exception {
-        JSONObject defaultParams = FH.getDefaultParams();
+        org.json.JSONObject defaultParams = FH.getDefaultParams2();
         ArrayList<Header> headers = new ArrayList<Header>(defaultParams.length());
 
         for (Iterator<String> it = defaultParams.keys(); it.hasNext(); ) {
@@ -391,18 +471,44 @@ public class FH {
      * @throws FHNotReadyException if init has not been called
      * @throws Exception           if pMethod is not one of GET, POST, PUT and DELETE OR if the cloud request
      *                             fails
+     * @deprecated the org.json.fh package is deprecated.  Please use org.json packages instead.
      */
+    @Deprecated
     public static void cloud(
         String pPath,
         String pMethod,
         Header[] pHeaders,
-        JSONObject pParams,
+        org.json.fh.JSONObject pParams,
         FHActCallback pCallback)
         throws Exception {
         FHCloudRequest cloudRequest = buildCloudRequest(pPath, pMethod, pHeaders, pParams);
         cloudRequest.executeAsync(pCallback);
     }
 
+    /**
+     * Calls cloud APIs asynchronously.
+     *
+     * @param pPath     the path to the cloud API
+     * @param pMethod   currently supports GET, POST, PUT and DELETE
+     * @param pHeaders  headers need to be set, can be null
+     * @param pParams   the request params, can be null. Will be converted to query strings depending
+     *                  on the HTTP method
+     * @param pCallback the callback to be executed when the cloud call is finished
+     * @throws FHNotReadyException if init has not been called
+     * @throws Exception           if pMethod is not one of GET, POST, PUT and DELETE OR if the cloud request
+     *                             fails
+     */
+    public static void cloud(
+        String pPath,
+        String pMethod,
+        Header[] pHeaders,
+        org.json.JSONObject pParams,
+        FHActCallback pCallback)
+        throws Exception {
+        FHCloudRequest cloudRequest = buildCloudRequest(pPath, pMethod, pHeaders, pParams);
+        cloudRequest.executeAsync(pCallback);
+    }
+    
     /**
      * Sets the log level for the library.
      * The default level is {@link #LOG_LEVEL_ERROR}. Please make sure this is set to {@link #LOG_LEVEL_ERROR}
