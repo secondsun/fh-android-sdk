@@ -25,7 +25,9 @@ import com.feedhenry.sdk.utils.DataManager;
 import com.feedhenry.sdk.utils.FHLog;
 import com.feedhenry.sdk.utils.StringUtils;
 import com.feedhenry.sdk2.FHHttpClient;
-import org.json.fh.JSONObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.json.JSONException;
 
 public class FHAuthSession {
     public static final String SESSION_TOKEN_KEY = "sessionToken";
@@ -111,7 +113,7 @@ public class FHAuthSession {
         throws Exception {
         String host = AppProps.getInstance().getHost();
         String url = StringUtils.removeTrailingSlash(host) + FHRemote.PATH_PREFIX + pPath;
-        JSONObject params = new JSONObject().put(SESSION_TOKEN_KEY, pSessionToken);
+        org.json.JSONObject params = new org.json.JSONObject().put(SESSION_TOKEN_KEY, pSessionToken);
         try {
             mHttpClient.post(
                 url,
@@ -120,9 +122,14 @@ public class FHAuthSession {
                 new FHActCallback() {
                     @Override
                     public void success(FHResponse pResponse) {
-                        JSONObject res = pResponse.getJson();
+                        org.json.JSONObject res = pResponse.getResults();
                         if (pCallback != null) {
-                            pCallback.handleSuccess(res.getBoolean("isValid"));
+                            try {
+                                pCallback.handleSuccess(res.getBoolean("isValid"));
+                            } catch (JSONException ex) {
+                                FHLog.e(LOG_TAG, ex.getMessage(), ex);
+                                pCallback.handleError(new FHResponse(res, null, ex, ex.getMessage()));
+                            }
                         }
                     }
 

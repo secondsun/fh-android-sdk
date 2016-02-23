@@ -20,7 +20,7 @@ import com.feedhenry.sdk.FH;
 import com.feedhenry.sdk.FHRemote;
 import com.feedhenry.sdk.utils.FHLog;
 import cz.msebera.android.httpclient.Header;
-import org.json.fh.JSONObject;
+import org.json.JSONObject;
 
 /**
  * The request for calling the initialization function.
@@ -39,9 +39,14 @@ public class FHInitializeRequest extends FHRemote {
     }
 
     @Override
-    protected JSONObject getRequestArgs() {
+    protected org.json.fh.JSONObject getRequestArgs() {
+        return new org.json.fh.JSONObject(getRequestArgs2().toString());
+    }
+
+    @Override
+    protected JSONObject getRequestArgs2() {
         try {
-            JSONObject reqData = FH.getDefaultParams();
+            org.json.JSONObject reqData = FH.getDefaultParams2();
             FHLog.v(LOG_TAG, "FH init request data : " + reqData.toString());
             return reqData;
         } catch (Exception e) {
@@ -51,6 +56,8 @@ public class FHInitializeRequest extends FHRemote {
         }
     }
 
+    
+    
     @Override
     protected Header[] buildHeaders(Header[] pHeaders) throws Exception {
         return null;

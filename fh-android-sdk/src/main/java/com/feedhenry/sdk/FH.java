@@ -583,12 +583,12 @@ public class FH {
                 mContext, new Callback<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        pCallback.success(new FHResponse(null, null, null, null));
+                        pCallback.success(new FHResponse((org.json.JSONObject)null, null, null, null));
                     }
 
                     @Override
                     public void onFailure(Exception e) {
-                        pCallback.fail(new FHResponse(null, null, e, e.getMessage()));
+                        pCallback.fail(new FHResponse((org.json.JSONObject)null, null, e, e.getMessage()));
                     }
                 });
     }
@@ -605,12 +605,12 @@ public class FH {
             new UnifiedPushMetricsMessage(pMessageId), new Callback<UnifiedPushMetricsMessage>() {
                 @Override
                 public void onSuccess(UnifiedPushMetricsMessage data) {
-                    pCallback.success(new FHResponse(null, null, null, null));
+                    pCallback.success(new FHResponse((org.json.JSONObject)null, null, null, null));
                 }
 
                 @Override
                 public void onFailure(Exception e) {
-                    pCallback.fail(new FHResponse(null, null, e, e.getMessage()));
+                    pCallback.fail(new FHResponse((org.json.JSONObject)null, null, e, e.getMessage()));
                 }
             });
     }

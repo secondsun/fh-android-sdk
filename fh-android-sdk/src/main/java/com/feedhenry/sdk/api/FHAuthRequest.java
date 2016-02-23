@@ -37,8 +37,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
-import org.json.fh.JSONException;
-import org.json.fh.JSONObject;
+
 
 /**
  * The request for calling the authentication function.
@@ -134,14 +133,19 @@ public class FHAuthRequest extends FHRemote {
     }
 
     @Override
-    protected JSONObject getRequestArgs() {
-        JSONObject reqData = new JSONObject();
+    protected org.json.fh.JSONObject getRequestArgs() {
+        return new org.json.fh.JSONObject(getRequestArgs2().toString());
+    }
+
+    @Override
+    protected org.json.JSONObject getRequestArgs2() {
+        org.json.JSONObject reqData = new org.json.JSONObject();
         try {
             reqData.put("__fh", FH.getDefaultParams()); // keep backward compatibility
             reqData.put("policyId", mPolicyId);
             reqData.put("device", Device.getDeviceId(mContext));
             reqData.put("clientToken", AppProps.getInstance().getAppId());
-            JSONObject params = new JSONObject();
+            org.json.JSONObject params = new org.json.JSONObject();
             if (mUserName != null && mPassword != null) {
                 params.put("userId", mUserName);
                 params.put("password", mPassword);
@@ -157,7 +161,7 @@ public class FHAuthRequest extends FHRemote {
         }
         return reqData;
     }
-
+    
     /**
      * If the auth policy type is OAuth, user need to enter their username and password for the OAuth provider.
      * If an Activity instance is provided, the SDK will automatically handle this (By presenting the
@@ -180,7 +184,7 @@ public class FHAuthRequest extends FHRemote {
             FHActCallback tmpCallback = new FHActCallback() {
                 @Override
                 public void success(FHResponse pResponse) {
-                    final JSONObject jsonRes = pResponse.getJson();
+                    final org.json.JSONObject jsonRes = pResponse.getResults();
                     try {
                         String status = jsonRes.getString("status");
                         if ("ok".equalsIgnoreCase(status)) {
@@ -218,7 +222,7 @@ public class FHAuthRequest extends FHRemote {
             FHActCallback tmpCallback = new FHActCallback() {
                 @Override
                 public void success(FHResponse pResponse) {
-                    final JSONObject jsonRes = pResponse.getJson();
+                    final org.json.JSONObject jsonRes = pResponse.getResults();
                     try {
                         String status = jsonRes.getString("status");
                         if ("ok".equalsIgnoreCase(status)) {
@@ -247,7 +251,7 @@ public class FHAuthRequest extends FHRemote {
         }
     }
 
-    private void startAuthIntent(final JSONObject pJsonRes, final FHActCallback pCallback) throws Exception {
+    private void startAuthIntent(final org.json.JSONObject pJsonRes, final FHActCallback pCallback) throws Exception {
         String url = pJsonRes.getString("url");
         FHLog.v(LOG_TAG, "Got oAuth url back, url = " + url + ". Open it in new intent.");
         Bundle data = new Bundle();
@@ -275,7 +279,7 @@ public class FHAuthRequest extends FHRemote {
             String data = pIntent.getStringExtra("url");
             FHResponse res = null;
             if ("NOT_FINISHED".equalsIgnoreCase(data)) {
-                res = new FHResponse(null, null, new Exception("Cancelled"), "Cancelled");
+                res = new FHResponse((org.json.JSONObject)null, null, new Exception("Cancelled"), "Cancelled");
                 mCallback.fail(res);
             } else {
                 if (data.contains("status=complete")) {
@@ -289,7 +293,7 @@ public class FHAuthRequest extends FHRemote {
                     }
                     String result = queryMap.get("result");
                     if ("success".equals(result)) {
-                        JSONObject resJson = new JSONObject();
+                        org.json.JSONObject resJson = new org.json.JSONObject();
                         try {
                             String sessionToken = queryMap.get("fh_auth_session");
                             if (sessionToken != null) {
@@ -298,9 +302,9 @@ public class FHAuthRequest extends FHRemote {
                             resJson.put(FHAuthSession.SESSION_TOKEN_KEY, sessionToken);
                             resJson.put(
                                 "authResponse",
-                                new JSONObject(URLDecoder.decode(queryMap.get("authResponse"), "UTF-8")));
+                                new org.json.JSONObject(URLDecoder.decode(queryMap.get("authResponse"), "UTF-8")));
                             res = new FHResponse(resJson, null, null, null);
-                        } catch (JSONException e) {
+                        } catch (org.json.JSONException e) {
                             e.printStackTrace();
                         } catch (UnsupportedEncodingException e) {
                             e.printStackTrace();
@@ -309,14 +313,14 @@ public class FHAuthRequest extends FHRemote {
                         mCallback.success(res);
                     } else {
                         res = new FHResponse(
-                            null,
+                            (org.json.JSONObject)null,
                             null,
                             new Exception("Authentication failed"),
                             "Authentication Failed");
                         mCallback.fail(res);
                     }
                 } else {
-                    res = new FHResponse(null, null, new Exception("Unknown error"), "Unknown error");
+                    res = new FHResponse((org.json.JSONObject)null, null, new Exception("Unknown error"), "Unknown error");
                     mCallback.fail(res);
                 }
             }

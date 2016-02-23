@@ -21,6 +21,9 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.SyncHttpClient;
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpHost;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.json.JSONException;
 import org.json.fh.JSONArray;
 import org.json.fh.JSONObject;
 
@@ -51,7 +54,7 @@ public class FHHttpClient {
         FHActCallback pCallback,
         boolean pUseSync)
         throws Exception {
-        instance.put(pUrl, pHeaders, pParams, pCallback, pUseSync);
+        instance.put(pUrl, pHeaders, new org.json.JSONObject(pParams.toString()), pCallback, pUseSync);
     }
 
     /**
@@ -74,7 +77,7 @@ public class FHHttpClient {
         FHActCallback pCallback,
         boolean pUseSync)
         throws Exception {
-        instance.get(pUrl, pHeaders, pParams, pCallback, pUseSync);
+        instance.get(pUrl, pHeaders, new org.json.JSONObject(pParams.toString()), pCallback, pUseSync);
     }
 
     /**
@@ -97,7 +100,7 @@ public class FHHttpClient {
         FHActCallback pCallback,
         boolean pUseSync)
         throws Exception {
-        instance.post(pUrl, pHeaders, pParams, pCallback, pUseSync);
+        instance.post(pUrl, pHeaders, new org.json.JSONObject(pParams.toString()), pCallback, pUseSync);
     }
 
     /**
@@ -136,8 +139,12 @@ public class FHHttpClient {
         public void onSuccess(int pStatusCode, Header[] pHeaders, org.json.JSONObject pRes) {
             FHLog.v(LOG_TAG, "Got response : " + pRes.toString());
             if (callback != null) {
-                FHResponse fhres = new FHResponse(new JSONObject(pRes.toString()), null, null, null);
-                callback.success(fhres);
+                try {
+                    FHResponse fhres = new FHResponse(new org.json.JSONObject(pRes.toString()), null, null, null);
+                    callback.success(fhres);
+                } catch (JSONException ex) {
+                    callback.fail(new FHResponse(pRes, null, ex, ex.getMessage()));
+                }
             }
         }
 
@@ -145,8 +152,12 @@ public class FHHttpClient {
         public void onSuccess(int pStatusCode, Header[] pHeaders, org.json.JSONArray pRes) {
             FHLog.v(LOG_TAG, "Got response : " + pRes.toString());
             if (callback != null) {
-                FHResponse fhres = new FHResponse(null, new JSONArray(pRes.toString()), null, null);
-                callback.success(fhres);
+                try {
+                    FHResponse fhres = new FHResponse(null, new org.json.JSONArray(pRes.toString()), null, null);
+                    callback.success(fhres);
+                } catch (JSONException ex) {
+                    callback.fail(new FHResponse(null, pRes, ex, ex.getMessage()));
+                }
             }
         }
 
@@ -154,7 +165,7 @@ public class FHHttpClient {
         public void onFailure(int pStatusCode, Header[] pHeaders, String pContent, Throwable pError) {
             FHLog.e(LOG_TAG, pError.getMessage(), pError);
             if (callback != null) {
-                FHResponse fhres = new FHResponse(null, null, pError, pContent);
+                FHResponse fhres = new FHResponse((org.json.JSONObject)null, null, pError, pContent);
                 callback.fail(fhres);
             }
         }

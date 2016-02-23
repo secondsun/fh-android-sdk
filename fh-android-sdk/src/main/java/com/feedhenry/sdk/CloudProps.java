@@ -15,17 +15,17 @@
  */
 package com.feedhenry.sdk;
 
+import android.util.Log;
 import com.feedhenry.sdk.utils.DataManager;
 import com.feedhenry.sdk.utils.FHLog;
 import com.feedhenry.sdk.utils.StringUtils;
 import java.util.regex.Pattern;
-import org.json.fh.JSONException;
 import org.json.fh.JSONObject;
 
 public class CloudProps {
 
     private static final Pattern INVALID_URI_SEGMENT = Pattern.compile("(_.*?)\\.");
-    private JSONObject mCloudProps;
+    private org.json.JSONObject mCloudProps;
     private String mHostUrl;
     private String mEnv;
     private static String mInitValue;
@@ -36,7 +36,7 @@ public class CloudProps {
 
     private static CloudProps mInstance;
 
-    private CloudProps(JSONObject pCloudProps) {
+    private CloudProps(org.json.JSONObject pCloudProps) {
         mCloudProps = pCloudProps;
     }
 
@@ -45,8 +45,13 @@ public class CloudProps {
      * "host" specified in assets/fhconfig.local.properties file.
      */
     private CloudProps() {
-        mCloudProps = new JSONObject();
-        mCloudProps.put("url", AppProps.getInstance().getHost());
+        mCloudProps = new org.json.JSONObject();
+        try {
+            mCloudProps.put("url", AppProps.getInstance().getHost());
+        } catch (org.json.JSONException unlikelyException) {//put can only throw an exception when the value is a numeric type.
+            FHLog.e(LOG_TAG, unlikelyException.getMessage(), unlikelyException);
+            throw new RuntimeException(unlikelyException);
+        }
     }
 
     /**
@@ -61,7 +66,7 @@ public class CloudProps {
                 if (mCloudProps.has("url")) {
                     hostUri = mCloudProps.getString("url");
                 } else if (mCloudProps.has("hosts")) {
-                    JSONObject hosts = mCloudProps.getJSONObject("hosts");
+                    org.json.JSONObject hosts = mCloudProps.getJSONObject("hosts");
                     if (hosts.has("url")) {
                         hostUri = hosts.getString("url");
                     } else {
@@ -98,15 +103,21 @@ public class CloudProps {
      * Gets the environment of the cloud app.
      *
      * @return The environment of the cloud app
+     * @throws Runtime exception if hosts is not a property in the cloud properties.
      */
     public String getEnv() {
+        try {
         if (mEnv == null) {
-            JSONObject hosts = mCloudProps.getJSONObject("hosts");
+            org.json.JSONObject hosts = mCloudProps.getJSONObject("hosts");
             if (hosts.has("environment")) {
                 mEnv = hosts.getString("environment");
             }
         }
         return mEnv;
+        } catch (org.json.JSONException exception) {
+            Log.e(LOG_TAG, exception.getMessage(), exception);
+            throw new RuntimeException(exception);
+        }
     }
 
     /**
@@ -120,7 +131,7 @@ public class CloudProps {
                 try {
                     mInitValue = mCloudProps.getString(INIT_KEY);
                     DataManager.getInstance().save(INIT_KEY, mInitValue);
-                } catch (JSONException e) {
+                } catch (org.json.JSONException e) {
                     FHLog.w(LOG_TAG, e.getMessage());
                 }
             }
@@ -144,14 +155,33 @@ public class CloudProps {
      *
      * @param pCloudProps the JSONObjct contains the details of the cloud app
      * @return CloudProps
+     * @deprecated the org.json.fh package is deprecated.  Please use {@link #init(org.json.JSONObject) }
      */
+    @Deprecated
     public static CloudProps init(JSONObject pCloudProps) {
+        if (mInstance == null) {
+            try {
+                mInstance = new CloudProps(new org.json.JSONObject(pCloudProps.toString()));
+            } catch (org.json.JSONException ex) {
+                FHLog.e(LOG_TAG, ex.getMessage(), ex);
+                throw new RuntimeException(ex);
+            }
+        }
+        return mInstance;
+    }
+    
+    /**
+     * Gets the instance of CloudProps via a JSONObject.
+     *
+     * @param pCloudProps the JSONObjct contains the details of the cloud app
+     * @return CloudProps
+     */
+    public static CloudProps init(org.json.JSONObject pCloudProps) {
         if (mInstance == null) {
             mInstance = new CloudProps(pCloudProps);
         }
         return mInstance;
     }
-
     /**
      * Gets the instance of the CloudProps based on local cached data if exists.
      *
@@ -162,7 +192,7 @@ public class CloudProps {
             String saved = DataManager.getInstance().read(HOSTS_KEY);
             if (saved != null) {
                 try {
-                    JSONObject parsed = new JSONObject(saved);
+                    org.json.JSONObject parsed = new org.json.JSONObject(saved);
                     mInstance = new CloudProps(parsed);
                 } catch (Exception e) {
                     mInstance = null;

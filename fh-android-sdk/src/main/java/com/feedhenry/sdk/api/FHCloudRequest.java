@@ -23,7 +23,9 @@ import com.feedhenry.sdk.FHHttpClient;
 import com.feedhenry.sdk.FHRemote;
 import com.feedhenry.sdk.utils.FHLog;
 import cz.msebera.android.httpclient.Header;
-import org.json.fh.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 public class FHCloudRequest extends FHRemote {
 
@@ -44,7 +46,7 @@ public class FHCloudRequest extends FHRemote {
     private String mPath = "";
     private Methods mMethod = Methods.GET;
     private Header[] mHeaders = null;
-    private JSONObject mArgs = new JSONObject();
+    private org.json.JSONObject mArgs = new org.json.JSONObject();
 
     public FHCloudRequest(Context context) {
         super(context);
@@ -62,35 +64,51 @@ public class FHCloudRequest extends FHRemote {
         mHeaders = pHeaders;
     }
 
-    public void setRequestArgs(JSONObject pArgs) {
+    @Deprecated
+    public void setRequestArgs(org.json.fh.JSONObject pArgs) {
+        try {
+            mArgs = new JSONObject(mArgs.toString());
+        } catch (JSONException ex) {
+            FHLog.e(LOG_TAG, ex.getMessage(), ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public void setRequestArgs(org.json.JSONObject pArgs) {
         mArgs = pArgs;
     }
 
+    
     @Override
     protected String getPath() {
         return mPath;
     }
 
     @Override
-    protected JSONObject getRequestArgs() {
-        return mArgs;
+    protected org.json.fh.JSONObject getRequestArgs() {
+        return new org.json.fh.JSONObject(mArgs.toString());
     }
 
+    @Override
+    protected org.json.JSONObject getRequestArgs2() {
+        return mArgs;
+    }
+    
     @Override
     public void executeAsync(FHActCallback pCallback) throws Exception {
         try {
             switch (mMethod) {
                 case GET:
-                    FHHttpClient.get(getURL(), buildHeaders(mHeaders), mArgs, pCallback, false);
+                    new com.feedhenry.sdk2.FHHttpClient().get(getURL(), buildHeaders(mHeaders), mArgs, pCallback, false);
                     break;
                 case PUT:
-                    FHHttpClient.put(getURL(), buildHeaders(mHeaders), mArgs, pCallback, false);
+                    new com.feedhenry.sdk2.FHHttpClient().put(getURL(), buildHeaders(mHeaders), mArgs, pCallback, false);
                     break;
                 case POST:
-                    FHHttpClient.post(getURL(), buildHeaders(mHeaders), mArgs, pCallback, false);
+                    new com.feedhenry.sdk2.FHHttpClient().post(getURL(), buildHeaders(mHeaders), mArgs, pCallback, false);
                     break;
                 case DELETE:
-                    FHHttpClient.delete(getURL(), buildHeaders(mHeaders), mArgs, pCallback, false);
+                    new com.feedhenry.sdk2.FHHttpClient().delete(getURL(), buildHeaders(mHeaders), mArgs, pCallback, false);
                     break;
                 default:
                     break;
@@ -106,16 +124,16 @@ public class FHCloudRequest extends FHRemote {
         try {
             switch (mMethod) {
                 case GET:
-                    FHHttpClient.get(getURL(), buildHeaders(mHeaders), mArgs, pCallback, true);
+                    new com.feedhenry.sdk2.FHHttpClient().get(getURL(), buildHeaders(mHeaders), mArgs, pCallback, true);
                     break;
                 case PUT:
-                    FHHttpClient.put(getURL(), buildHeaders(mHeaders), mArgs, pCallback, true);
+                    new com.feedhenry.sdk2.FHHttpClient().put(getURL(), buildHeaders(mHeaders), mArgs, pCallback, true);
                     break;
                 case POST:
-                    FHHttpClient.post(getURL(), buildHeaders(mHeaders), mArgs, pCallback, true);
+                    new com.feedhenry.sdk2.FHHttpClient().post(getURL(), buildHeaders(mHeaders), mArgs, pCallback, true);
                     break;
                 case DELETE:
-                    FHHttpClient.delete(getURL(), buildHeaders(mHeaders), mArgs, pCallback, true);
+                    new com.feedhenry.sdk2.FHHttpClient().delete(getURL(), buildHeaders(mHeaders), mArgs, pCallback, true);
                     break;
             }
         } catch (Exception e) {

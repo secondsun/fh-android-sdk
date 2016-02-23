@@ -48,7 +48,7 @@ public abstract class FHRemote implements FHAct {
     @Override
     public void execute(FHActCallback pCallback) throws Exception {
         try {
-            mFHHttpClient.post(getApiURl(), buildHeaders(null), getRequestArgs(), pCallback, false);
+            mFHHttpClient.post(getApiURl(), buildHeaders(null), getRequestArgs2(), pCallback, false);
         } catch (Exception e) {
             FHLog.e(LOG_TAG, e.getMessage(), e);
             throw e;
@@ -67,7 +67,10 @@ public abstract class FHRemote implements FHAct {
 
     protected abstract String getPath();
 
+    @Deprecated
     protected abstract JSONObject getRequestArgs();
+
+    protected abstract org.json.JSONObject getRequestArgs2();
 
     protected abstract Header[] buildHeaders(Header[] pHeaders) throws Exception;
 }

@@ -71,7 +71,7 @@ public class FHHttpClient {
                     new FHJsonHttpResponseHandler(pCallback));
             }
         } else {
-            FHResponse res = new FHResponse(null, null, new Exception("offline"), "offline");
+            FHResponse res = new FHResponse((org.json.JSONObject)null, null, new Exception("offline"), "offline");
             pCallback.fail(res);
         }
     }
@@ -102,11 +102,12 @@ public class FHHttpClient {
                     new FHJsonHttpResponseHandler(pCallback));
             }
         } else {
-            FHResponse res = new FHResponse(null, null, new Exception("offline"), "offline");
+            FHResponse res = new FHResponse((org.json.JSONObject)null, null, new Exception("offline"), "offline");
             pCallback.fail(res);
         }
     }
 
+    
     public void post(
         String pUrl,
         Header[] pHeaders,
@@ -140,7 +141,7 @@ public class FHHttpClient {
                     new FHJsonHttpResponseHandler(pCallback));
             }
         } else {
-            FHResponse res = new FHResponse(null, null, new Exception("offline"), "offline");
+            FHResponse res = new FHResponse((org.json.JSONObject)null, null, new Exception("offline"), "offline");
             pCallback.fail(res);
         }
     }

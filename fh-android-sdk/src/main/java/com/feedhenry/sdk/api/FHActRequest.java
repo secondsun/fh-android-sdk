@@ -19,8 +19,12 @@ import android.content.Context;
 import com.feedhenry.sdk.CloudProps;
 import com.feedhenry.sdk.FH;
 import com.feedhenry.sdk.FHRemote;
+import com.feedhenry.sdk.utils.FHLog;
 import cz.msebera.android.httpclient.Header;
-import org.json.fh.JSONObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.json.JSONException;
+
 
 /**
  * The request for calling the cloud side function of the app. Example:
@@ -47,7 +51,7 @@ import org.json.fh.JSONObject;
 public class FHActRequest extends FHRemote {
 
     private String mRemoteAct;
-    protected JSONObject mArgs = new JSONObject();
+    protected org.json.JSONObject mArgs = new org.json.JSONObject();
 
     protected static String LOG_TAG = "com.feedhenry.sdk.api.FHActRequest";
 
@@ -80,23 +84,39 @@ public class FHActRequest extends FHRemote {
      * Set the parameters for the cloud side function
      * 
      * @param pArgs the parameters that will be passed to the cloud side function
+     * @deprecated use {@link #setArgs(org.json.JSONObject) } instead.
      */
-    public void setArgs(JSONObject pArgs) {
+    @Deprecated
+    public void setArgs(org.json.fh.JSONObject pArgs) {
+        try {
+            setArgs(new org.json.JSONObject(pArgs.toString()));
+        } catch (JSONException ex) {
+            FHLog.e(LOG_TAG, ex.getMessage(), ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public void setArgs(org.json.JSONObject pArgs) {
         mArgs = pArgs;
         // keep backward compatibility
         if (!mArgs.has("__fh")) {
             try {
-                mArgs.put("__fh", FH.getDefaultParams());
+                mArgs.put("__fh", FH.getDefaultParams2());
             } catch (Exception e) {
 
             }
         }
     }
 
-    protected JSONObject getRequestArgs() {
-        return mArgs;
+    
+    protected org.json.fh.JSONObject getRequestArgs() {
+        return new org.json.fh.JSONObject(mArgs.toString());
     }
 
+    protected org.json.JSONObject getRequestArgs2() {
+        return mArgs;
+    }
+    
     @Override
     protected String getPath() {
         return "cloud/" + mRemoteAct;
@@ -106,4 +126,5 @@ public class FHActRequest extends FHRemote {
     protected Header[] buildHeaders(Header[] pHeaders) throws Exception {
         return FH.getDefaultParamsAsHeaders(pHeaders);
     }
+
 }

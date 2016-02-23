@@ -310,13 +310,13 @@ public class FHSyncConfig {
 
     /**
      * Set if legacy mode is used
-     * @param mUseCustomSync
+     * @param mUseCustomSync true if legacy mode should be used.  False otherwise.
      */
     public void setUseCustomSync(boolean mUseCustomSync) { this.mUseCustomSync = mUseCustomSync; }
 
     /**
      * Check if legacy mode is enabled
-     * @return
+     * @return if true legacy mode will be used.  Otherwise false will be returned.
      */
     public boolean useCustomSync() { return this.mUseCustomSync; };
 
