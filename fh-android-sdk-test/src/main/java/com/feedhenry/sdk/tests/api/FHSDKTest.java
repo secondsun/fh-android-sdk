@@ -33,10 +33,9 @@ import com.feedhenry.sdk.api.FHCloudRequest;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class FHSDKTest extends AndroidTestCase {
-
-    private JSONObject resJson = null;
 
     private MockWebServer mockWebServer = null;
 
@@ -78,16 +77,17 @@ public class FHSDKTest extends AndroidTestCase {
         actSuccessResponse.setBody("{'status':'ok', 'type': 'act'}");
         mockWebServer.enqueue(actSuccessResponse);
         FHAct actCall = FH.buildActRequest("test", new JSONObject());
+        final AtomicReference<JSONObject> resJsonRef = new AtomicReference<>();
         FHActCallback callback = new FHActCallback() {
 
             @Override
             public void success(FHResponse pResponse) {
-                resJson = pResponse.getJson();
+                resJsonRef.set(pResponse.getJson());
             }
 
             @Override
             public void fail(FHResponse pResponse) {
-                resJson = null;
+                resJsonRef.set(null);
             }
         };
 
@@ -97,7 +97,7 @@ public class FHSDKTest extends AndroidTestCase {
             actCall.execute(callback);
         }
 
-        assertEquals(resJson.getString("type"), "act");
+        assertEquals(resJsonRef.get().getString("type"), "act");
         // verify request object
         RecordedRequest request = mockWebServer.takeRequest();
         assertEquals("POST", request.getMethod().toUpperCase());
@@ -119,7 +119,7 @@ public class FHSDKTest extends AndroidTestCase {
         JSONObject p = new JSONObject();
         p.put("test", "true");
         makeCloudRequest("GET", null, p, false);
-        verifyCloudRequest("/v1/cloud/test?test=true", "GET", null, null);
+        verifyCloudRequest("/v1/cloud/test?test=true", "GET", null, (org.json.fh.JSONObject)null);
     }
 
     public void testCloudGetAsync() throws Exception {
@@ -127,7 +127,7 @@ public class FHSDKTest extends AndroidTestCase {
         JSONObject p = new JSONObject();
         p.put("test", "true");
         makeCloudRequest("GET", null, p, true);
-        verifyCloudRequest("/v1/cloud/test?test=true", "GET", null, null);
+        verifyCloudRequest("/v1/cloud/test?test=true", "GET", null, (org.json.fh.JSONObject)null);
     }
 
     public void testCloudDeleteSync() throws Exception {
@@ -137,7 +137,7 @@ public class FHSDKTest extends AndroidTestCase {
         JSONObject p = new JSONObject();
         p.put("test", "true");
         makeCloudRequest("DELETE", null, p, false);
-        verifyCloudRequest("/v1/cloud/test?test=true", "DELETE", null, null);
+        verifyCloudRequest("/v1/cloud/test?test=true", "DELETE", null, (org.json.fh.JSONObject)null);
     }
 
     public void testCloudDeleteAsync() throws Exception {
@@ -145,7 +145,7 @@ public class FHSDKTest extends AndroidTestCase {
         JSONObject p = new JSONObject();
         p.put("test", "true");
         makeCloudRequest("DELETE", null, p, true);
-        verifyCloudRequest("/v1/cloud/test?test=true", "DELETE", null, null);
+        verifyCloudRequest("/v1/cloud/test?test=true", "DELETE", null, (org.json.fh.JSONObject)null);
     }
 
     public void testCloudPostSync() throws Exception {
@@ -162,6 +162,17 @@ public class FHSDKTest extends AndroidTestCase {
     public void testCloudPostASync() throws Exception {
         enqueueCloudResponse();
         JSONObject p = new JSONObject();
+        p.put("test", "true");
+        Header[] headers = new Header[1];
+        headers[0] = new BasicHeader("testHeader", "testValue");
+
+        makeCloudRequest("POST", headers, p, true);
+        verifyCloudRequest("/v1/cloud/test", "POST", headers, p);
+    }
+    
+    public void testCloudPostASync2() throws Exception {
+        enqueueCloudResponse();
+        org.json.JSONObject p = new org.json.JSONObject();
         p.put("test", "true");
         Header[] headers = new Header[1];
         headers[0] = new BasicHeader("testHeader", "testValue");
@@ -207,16 +218,17 @@ public class FHSDKTest extends AndroidTestCase {
 
     private void makeCloudRequest(String method, Header[] headers, JSONObject params, boolean pAsync) throws JSONException, Exception {
         FHCloudRequest cloudRequest = FH.buildCloudRequest("/v1/cloud/test", method, headers, params);
+        final AtomicReference<JSONObject> resJsonRef = new AtomicReference<>();
         FHActCallback callback = new FHActCallback() {
 
             @Override
             public void success(FHResponse pResponse) {
-                resJson = pResponse.getJson();
+                resJsonRef.set(pResponse.getJson());
             }
 
             @Override
             public void fail(FHResponse pResponse) {
-                resJson = null;
+                resJsonRef.set(null);
             }
         };
         if (pAsync) {
@@ -225,10 +237,36 @@ public class FHSDKTest extends AndroidTestCase {
             cloudRequest.execute(callback);
         }
 
-        assertNotNull(resJson);
-        assertEquals("cloud", resJson.getString("type"));
+        assertNotNull(resJsonRef.get());
+        assertEquals("cloud", resJsonRef.get().getString("type"));
     }
 
+    private void makeCloudRequest(String method, Header[] headers, org.json.JSONObject params, boolean pAsync) throws org.json.JSONException, Exception {
+        FHCloudRequest cloudRequest = FH.buildCloudRequest("/v1/cloud/test", method, headers, params);
+        final AtomicReference<JSONObject> resJsonRef = new AtomicReference<>();
+        
+        FHActCallback callback = new FHActCallback() {
+
+            @Override
+            public void success(FHResponse pResponse) {
+                resJsonRef.set(pResponse.getJson());
+            }
+
+            @Override
+            public void fail(FHResponse pResponse) {
+                resJsonRef.set(null);
+            }
+        };
+        if (pAsync) {
+            runAsyncRequest(cloudRequest, callback);
+        } else {
+            cloudRequest.execute(callback);
+        }
+
+        assertNotNull(resJsonRef.get());
+        assertEquals("cloud", resJsonRef.get().getString("type"));
+    }
+    
     private void verifyCloudRequest(String path, String method, Header[] headers, JSONObject params) throws Exception {
         RecordedRequest request = mockWebServer.takeRequest();
         assertEquals(method.toLowerCase(), request.getMethod().toLowerCase());
@@ -250,6 +288,27 @@ public class FHSDKTest extends AndroidTestCase {
 
     }
 
+        private void verifyCloudRequest(String path, String method, Header[] headers, org.json.JSONObject params) throws Exception {
+        RecordedRequest request = mockWebServer.takeRequest();
+        assertEquals(method.toLowerCase(), request.getMethod().toLowerCase());
+
+        String cuidHeader = request.getHeader("x-fh-cuid");
+        assertEquals(getDeviceId(), cuidHeader);
+
+        if (null != headers) {
+            for (int i = 0; i < headers.length; i++) {
+                String requestHeaderValue = request.getHeader(headers[i].getName());
+                assertEquals(requestHeaderValue, headers[i].getValue());
+            }
+        }
+
+        if (null != params) {
+            String requestBody = new String(request.getBody().readUtf8());
+            assertEquals(requestBody.toString(), params.toString());
+        }
+
+    }
+    
     private String getDeviceId() {
         return android.provider.Settings.Secure.getString(getContext()
                 .getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);

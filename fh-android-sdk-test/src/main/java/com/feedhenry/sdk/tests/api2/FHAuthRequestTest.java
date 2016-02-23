@@ -79,7 +79,7 @@ public class FHAuthRequestTest extends ActivityInstrumentationTestCase2 {
         authRequest.setAuthUser("testAuthPolicy", "test", "test");
 
         FHHttpClient mockClient = Mockito.mock(FHHttpClient.class);
-        Mockito.doAnswer(callSuccess()).when(mockClient).post(any(String.class), any(Header[].class), any(JSONObject.class), any(FHActCallback.class), anyBoolean());
+        Mockito.doAnswer(callSuccess()).when(mockClient).post(any(String.class), any(Header[].class), any(org.json.JSONObject.class), any(FHActCallback.class), anyBoolean());
 
         final AtomicBoolean success = new AtomicBoolean(false);
         

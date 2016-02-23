@@ -47,6 +47,11 @@ public class FHRemoteTest extends AndroidTestCase {
             }
             
             @Override
+            protected org.json.JSONObject getRequestArgs2() {
+                return new org.json.JSONObject();
+            }
+            
+            @Override
             protected Header[] buildHeaders(Header[] pHeaders) throws Exception {
                 return new Header[0];
             }
@@ -60,7 +65,7 @@ public class FHRemoteTest extends AndroidTestCase {
         
         fhRemote.execute(callback);
         
-        verify(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), eq(new JSONObject()), eq(callback), eq(false));
+        verify(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), any(org.json.JSONObject.class), eq(callback), eq(false));
         
     }
     
@@ -71,7 +76,7 @@ public class FHRemoteTest extends AndroidTestCase {
         fhRemote.setCallback(callback);
         fhRemote.execute();
         
-        verify(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), eq(new JSONObject()), eq(callback), eq(false));
+        verify(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), any(org.json.JSONObject.class), eq(callback), eq(false));
         
     }
     
@@ -80,7 +85,7 @@ public class FHRemoteTest extends AndroidTestCase {
         FHTestUtils.injectInto(fhRemote, httpClient);
         Exception stubException = new Exception();
         FHActCallback callback = mock(FHActCallback.class);
-        Mockito.doThrow(stubException).when(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), eq(new JSONObject()), eq(callback), eq(false));
+        Mockito.doThrow(stubException).when(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), any(org.json.JSONObject.class), eq(callback), eq(false));
         
         fhRemote.setCallback(callback);
         
@@ -99,7 +104,7 @@ public class FHRemoteTest extends AndroidTestCase {
         FHTestUtils.injectInto(fhRemote, httpClient);
         Exception stubException = new Exception();
         FHActCallback callback = mock(FHActCallback.class);
-        Mockito.doThrow(stubException).when(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), eq(new JSONObject()), eq(callback), eq(false));
+        Mockito.doThrow(stubException).when(httpClient).post(eq("http://localhost:9000/box/srv/1.1/"), any(Header[].class), any(org.json.JSONObject.class), eq(callback), eq(false));
         
         try {
             fhRemote.execute(callback);

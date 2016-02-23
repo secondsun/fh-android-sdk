@@ -144,7 +144,7 @@ public class FHHttpClient {
             throws Exception {
         if (FH.isOnline()) {
 
-            StringEntity entity = new StringEntity(new JSONObject().toString());
+            StringEntity entity = new StringEntity(new org.json.JSONObject().toString());
             if (pParams != null) {
                 entity = new StringEntity(pParams.toString(), "UTF-8");
             }

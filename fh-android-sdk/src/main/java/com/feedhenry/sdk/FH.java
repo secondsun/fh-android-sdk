@@ -37,6 +37,7 @@ import org.jboss.aerogear.android.unifiedpush.RegistrarManager;
 import org.jboss.aerogear.android.unifiedpush.gcm.AeroGearGCMPushConfiguration;
 import org.jboss.aerogear.android.unifiedpush.gcm.AeroGearGCMPushRegistrar;
 import org.jboss.aerogear.android.unifiedpush.metrics.UnifiedPushMetricsMessage;
+import org.json.JSONObject;
 
 /**
  * The FH class provides static methods to initialize the library, create new instances of all the
@@ -247,7 +248,7 @@ public class FH {
      * @param pRemoteAction the name of the cloud side function
      * @param pParams the parameters for the cloud side function
      * @return an instance of FHActRequest
-     * @throws FHNotReadyException
+     * @throws FHNotReadyException if FH.init has not finished
      */
     public static FHActRequest buildActRequest(String pRemoteAction, org.json.JSONObject pParams) throws FHNotReadyException {
         FHActRequest request = (FHActRequest) buildAction(FH_API_ACT);
@@ -315,7 +316,7 @@ public class FH {
         request.setPath(pPath);
         request.setHeaders(pHeaders);
         request.setMethod(Methods.parse(pMethod));
-        request.setRequestArgs(pParams);
+        request.setRequestArgs(new JSONObject(pParams.toString()));
         return request;
     }
 

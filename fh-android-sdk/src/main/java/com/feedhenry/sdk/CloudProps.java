@@ -103,7 +103,7 @@ public class CloudProps {
      * Gets the environment of the cloud app.
      *
      * @return The environment of the cloud app
-     * @throws Runtime exception if hosts is not a property in the cloud properties.
+     * @throws RuntimeException if hosts is not a property in the cloud properties.
      */
     public String getEnv() {
         try {

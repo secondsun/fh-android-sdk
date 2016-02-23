@@ -24,8 +24,16 @@ import com.feedhenry.sdk.api2.FHAuthSession;
 import com.feedhenry.sdk.utils.DataManager;
 import com.feedhenry.sdk2.FHHttpClient;
 import cz.msebera.android.httpclient.Header;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.json.fh.JSONObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mockito.Matchers;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.matches;
@@ -65,7 +73,7 @@ public class FHAuthSessionTest extends AndroidTestCase {
     public void testVerify() throws Exception {
         final AtomicBoolean valid = new AtomicBoolean(false);
         
-        doAnswer(verifyTrue()).when(mFHHttpClient).post(matches("http://localhost:9000/box/srv/1.1/admin/authpolicy/verifysession"), any(Header[].class), eq(new JSONObject().put(SESSION_TOKEN_KEY, TEST_TOKEN)), any(FHActCallback.class), eq(true));
+        doAnswer(verifyTrue()).when(mFHHttpClient).post(matches("http://localhost:9000/box/srv/1.1/admin/authpolicy/verifysession"), any(Header[].class), Matchers.argThat(new JSONMatcher(new org.json.JSONObject().put(SESSION_TOKEN_KEY, TEST_TOKEN))), any(FHActCallback.class), eq(true));
         
         session.verify(new com.feedhenry.sdk.api.FHAuthSession.Callback() {
             private String TAG = "Callback";
@@ -80,17 +88,17 @@ public class FHAuthSessionTest extends AndroidTestCase {
             }
         }, true);
         
-        verify(mFHHttpClient).post(matches("http://localhost:9000/box/srv/1.1/admin/authpolicy/verifysession"), any(Header[].class), eq(new JSONObject().put(SESSION_TOKEN_KEY, TEST_TOKEN)), any(FHActCallback.class), eq(true));
+        verify(mFHHttpClient).post(matches("http://localhost:9000/box/srv/1.1/admin/authpolicy/verifysession"), any(Header[].class), Matchers.argThat(new JSONMatcher(new org.json.JSONObject().put(SESSION_TOKEN_KEY, TEST_TOKEN))), any(FHActCallback.class), eq(true));
         assertTrue(valid.get());
         assertEquals(TEST_TOKEN, session.getToken());
     }
 
     public void testClear() throws Exception {
-        doAnswer(verifyTrue()).when(mFHHttpClient).post(matches("http://localhost:9000/box/srv/1.1/admin/authpolicy/revokesession"), any(Header[].class), eq(new JSONObject().put(SESSION_TOKEN_KEY, TEST_TOKEN)), any(FHActCallback.class), eq(true));
+        doAnswer(verifyTrue()).when(mFHHttpClient).post(matches("http://localhost:9000/box/srv/1.1/admin/authpolicy/revokesession"), any(Header[].class), Matchers.argThat(new JSONMatcher(new org.json.JSONObject().put(SESSION_TOKEN_KEY, TEST_TOKEN))), any(FHActCallback.class), eq(true));
         
         session.clear(true);
         assertFalse(session.exists());
-        verify(mFHHttpClient).post(matches("http://localhost:9000/box/srv/1.1/admin/authpolicy/revokesession"), any(Header[].class), eq(new JSONObject().put(SESSION_TOKEN_KEY, TEST_TOKEN)), any(FHActCallback.class), eq(true));
+        verify(mFHHttpClient).post(matches("http://localhost:9000/box/srv/1.1/admin/authpolicy/revokesession"), any(Header[].class), Matchers.argThat(new JSONMatcher(new org.json.JSONObject().put(SESSION_TOKEN_KEY, TEST_TOKEN))), any(FHActCallback.class), eq(true));
     }
 
     private Answer verifyTrue() {
@@ -106,7 +114,46 @@ public class FHAuthSessionTest extends AndroidTestCase {
     }
     
     private FHResponse successResponse() {
-        JSONObject successJSON = new JSONObject("{\"status\":\"ok\", \"isValid\":true}");
-        return new FHResponse(successJSON, null, null, null);
+        try {
+            org.json.JSONObject successJSON = new org.json.JSONObject("{\"status\":\"ok\", \"isValid\":true}");
+            return new FHResponse(successJSON, null, null, null);
+        } catch (JSONException ex) {
+            throw new RuntimeException(ex);
+        }
     }
+    
+    private static class JSONMatcher extends BaseMatcher<JSONObject> {
+
+        private final JSONObject test;
+
+        public JSONMatcher(JSONObject test) {
+            this.test = test;
+        }
+        
+        @Override
+        public boolean matches(Object item) {
+            if (item == null || !(item instanceof JSONObject)) {
+                return false;
+            }
+            Iterator<String> keysIter = test.keys();
+            
+            while(keysIter.hasNext()) {
+                try {
+                    String key = keysIter.next();
+                    if (!test.get(key).toString().equals(((JSONObject)item).get(key).toString())) {
+                        return false;
+                    }
+                } catch (JSONException ex) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText(test.toString());
+        }
+    }
+    
 }
