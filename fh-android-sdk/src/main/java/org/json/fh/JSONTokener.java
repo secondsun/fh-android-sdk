@@ -31,6 +31,9 @@ package org.json.fh;
  *
  * @author JSON.org
  * @version 2
+ * 
+ * @deprecated 
+ * 
  */
 public class JSONTokener {
 

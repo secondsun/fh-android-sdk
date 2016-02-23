@@ -74,6 +74,8 @@ import java.util.TreeSet;
  *
  * @author JSON.org
  * @version 2
+ * 
+ * @deprecated 
  */
 public class JSONObject implements Serializable {
 

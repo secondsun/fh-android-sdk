@@ -59,6 +59,8 @@ import java.util.Map;
  *
  * @author JSON.org
  * @version 2
+ * 
+ * @deprecated  
  */
 public class JSONArray extends JSONObject {
 
