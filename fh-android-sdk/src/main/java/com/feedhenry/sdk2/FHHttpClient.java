@@ -26,8 +26,8 @@ import cz.msebera.android.httpclient.HttpHost;
 import cz.msebera.android.httpclient.conn.params.ConnRoutePNames;
 import cz.msebera.android.httpclient.entity.StringEntity;
 import java.util.Iterator;
-import org.json.fh.JSONArray;
-import org.json.fh.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class FHHttpClient {
 
@@ -142,6 +142,17 @@ public class FHHttpClient {
         }
     }
 
+    public void delete(
+        String pUrl,
+        Header[] pHeaders,
+        org.json.fh.JSONObject pParams,
+        FHActCallback pCallback,
+        boolean pUseSync)
+        throws Exception {
+        JSONObject newParams = new JSONObject(pParams.toString());
+        delete(pUrl, pHeaders, newParams, pCallback, pUseSync);
+    }
+    
     public void delete(
         String pUrl,
         Header[] pHeaders,

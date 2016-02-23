@@ -15,21 +15,57 @@
  */
 package com.feedhenry.sdk;
 
+import android.util.Log;
+import org.json.JSONException;
 import org.json.fh.JSONArray;
 import org.json.fh.JSONObject;
 
 /**
  * Represents the response data from FeedHenry when an API call completes.
  */
-
 public class FHResponse {
 
-    private JSONObject mResults;
-    private JSONArray mResultArray;
+    private static final String TAG = FHResponse.class.getSimpleName();
+
+    private org.json.JSONObject mResults;
+    private org.json.JSONArray mResultArray;
     private Throwable mError;
     private String mErrorMessage;
 
+    /**
+     * 
+     * Constructs a response
+     * 
+     * @param pResults the Results of a response
+     * @param pResultArray the Results array of a response
+     * @param e an exception which was caught
+     * @param pError the error message
+     *
+     * @deprecated the org.json.fh package is deprecated.
+     */
+    @Deprecated
     public FHResponse(JSONObject pResults, JSONArray pResultArray, Throwable e, String pError) {
+        if (pResults != null) {
+            try {
+                mResults = new org.json.JSONObject(pResults.toString());
+            } catch (JSONException ex) {
+                Log.e(TAG, ex.getMessage(), ex);
+            }
+        }
+
+        if (pResultArray != null) {
+            try {
+                mResultArray = new org.json.JSONArray(pResultArray.toJSONArray(pResultArray));
+            } catch (JSONException ex) {
+                Log.e(TAG, ex.getMessage(), ex);
+            }
+
+        }
+        mError = e;
+        mErrorMessage = pError;
+    }
+
+    public FHResponse(org.json.JSONObject pResults, org.json.JSONArray pResultArray, Throwable e, String pError) {
         mResults = pResults;
         mResultArray = pResultArray;
         mError = e;
@@ -40,18 +76,28 @@ public class FHResponse {
      * Gets the response data as a JSONObject.
      *
      * @return a JSONObject
+     * @deprecated the org.json.fh package is deprecated.  Please use getResult
      */
     public JSONObject getJson() {
-        return mResults;
+        return new JSONObject(mResults.toString());
     }
 
     /**
      * Gets the response data as a JSONArray.
      *
      * @return a JSONArray
+     * @deprecated the org.json.fh package is deprecated.  Please use getResultArray
      */
     public JSONArray getArray() {
+        return new JSONArray(mResultArray.toString());
+    }
+
+    public org.json.JSONArray  getResultArray() {
         return mResultArray;
+    }
+
+    public org.json.JSONObject getResults() {
+        return mResults;
     }
 
     /**
