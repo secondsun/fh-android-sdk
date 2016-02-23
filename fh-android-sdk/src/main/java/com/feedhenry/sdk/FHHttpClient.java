@@ -18,13 +18,9 @@ package com.feedhenry.sdk;
 import com.feedhenry.sdk.utils.FHLog;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpHost;
-import cz.msebera.android.httpclient.conn.params.ConnRoutePNames;
-import cz.msebera.android.httpclient.entity.StringEntity;
-import java.util.Iterator;
 import org.json.fh.JSONArray;
 import org.json.fh.JSONObject;
 

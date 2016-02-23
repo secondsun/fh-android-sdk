@@ -18,13 +18,13 @@ package com.feedhenry.sdk.api2;
 
 import com.feedhenry.sdk.AppProps;
 import com.feedhenry.sdk.FHActCallback;
-import com.feedhenry.sdk2.FHHttpClient;
 import com.feedhenry.sdk.FHRemote;
 import com.feedhenry.sdk.FHResponse;
 import com.feedhenry.sdk.api.FHAuthSession.Callback;
 import com.feedhenry.sdk.utils.DataManager;
 import com.feedhenry.sdk.utils.FHLog;
 import com.feedhenry.sdk.utils.StringUtils;
+import com.feedhenry.sdk2.FHHttpClient;
 import org.json.fh.JSONObject;
 
 public class FHAuthSession {
