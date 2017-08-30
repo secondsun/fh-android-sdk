@@ -368,6 +368,25 @@ public class FHSyncClient {
         }
     }
 
+    /**
+     * The client's lifecycle is
+     *  * Created
+     *  * Initialized
+     *  * Resumed
+     *  * Paused
+     *  * Stopped
+     *  * Destroyed
+     *
+     * When the client is destroyed and created initialized will be false and it is safe to
+     * call the init method.  This is important for making sure only one instance of the client
+     * is running at a time.
+     *
+     * @return true if the client is initialized
+     */
+    public boolean isInitialised() {
+        return mInitialised;
+    }
+
     private class MonitorTask implements Runnable {
 
         private boolean mKeepRunning = true;

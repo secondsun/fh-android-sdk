@@ -10,6 +10,11 @@ import com.evernote.android.job.JobCreator;
 public class SyncJobCreator implements JobCreator {
     @Override
     public Job create(String tag) {
-        return null;
+        switch (tag) {
+            case SyncJob.JOB_TAG:
+                return new SyncJob();
+            default:
+                return null;
+        }
     }
 }
