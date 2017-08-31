@@ -16,7 +16,9 @@
 package com.feedhenry.sdk.sync;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -39,8 +41,9 @@ import org.json.fh.JSONObject;
  * <a href="http://docs.feedhenry.com/v3/guides/sync_service.html">data sync
  * framework docs</a>.
  */
-public class FHSyncClient {
+public class FHSyncClient implements Application.ActivityLifecycleCallbacks {
 
+    private static final String TAG = "FHSyncClient";
     private static FHSyncClient mInstance;
 
     protected static final String LOG_TAG = "com.feedhenry.sdk.sync.FHSyncClient";
@@ -85,6 +88,11 @@ public class FHSyncClient {
      */
     public void init(Context pContext, FHSyncConfig pConfig, FHSyncListener pListener) {
         mContext = pContext.getApplicationContext();
+         if (mContext instanceof Application) {
+             ((Application)mContext).registerActivityLifecycleCallbacks(this);
+         } else {
+             Log.w(TAG, "mContext is not an application.  Not registering activity listener.");
+         }
         mConfig = pConfig;
         mSyncListener = pListener;
         initHandlers();
@@ -385,6 +393,41 @@ public class FHSyncClient {
      */
     public boolean isInitialised() {
         return mInitialised;
+    }
+
+    @Override
+    public void onActivityCreated(Activity activity, Bundle bundle) {
+        //Do Nothing
+    }
+
+    @Override
+    public void onActivityStarted(Activity activity) {
+        //Unschedule Sync if scheduled
+        
+    }
+
+    @Override
+    public void onActivityResumed(Activity activity) {
+    }
+
+    @Override
+    public void onActivityPaused(Activity activity) {
+
+    }
+
+    @Override
+    public void onActivityStopped(Activity activity) {
+
+    }
+
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onActivityDestroyed(Activity activity) {
+
     }
 
     private class MonitorTask implements Runnable {
