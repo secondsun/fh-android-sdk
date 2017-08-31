@@ -52,6 +52,8 @@ public class FHSyncConfig {
     private static final String KEY_NOTIFY_SYNC_FAILED = "notifySyncFailed";
     private static final String KEY_CRASHCOUNT = "crashCountWait";
     private static final String KEY_RESEND_CRASH = "resendCrashdUpdates";
+    private boolean enforceActivityChecks = false;
+    private boolean scheduleJob = true;
 
     /**
      * Sets the sync interval in seconds.
@@ -372,5 +374,43 @@ public class FHSyncConfig {
     public FHSyncConfig clone() {
         JSONObject json = this.getJSON();
         return FHSyncConfig.fromJSON(json);
+    }
+
+    /**
+     * enforceActivityChecks will use an activity lifecycle listener to enforce that a sync client
+     * is properly respecting the Android Activity lifecycle.
+     *
+     * The Sync Client will try to determine if init is being called from an Activity or if the
+     * Listener is a non-static inner class of an activity.  If it is unable to determine these facts
+     * then it will defer to the value of enforceActivityChecks.
+     *
+     * Defaults to false.
+     * @return if activity checks are enforced.
+     */
+    public boolean isEnforceActivityChecks() {
+        return enforceActivityChecks;
+    }
+
+    /**
+     * enforceActivityChecks will use an activity lifecycle listener to enforce that a sync client
+     * is properly respecting the Android Activity lifecycle.
+     *
+     * The Sync Client will try to determine if init is being called from an Activity or if the
+     * Listener is a non-static inner class of an activity.  If it is unable to determine these facts
+     * then it will defer to the value of enforceActivityChecks.
+     *
+     * Defaults to false.
+     * @param  enforceActivityChecks if activity checks are enforced.
+     */
+    public void setEnforceActivityChecks(boolean enforceActivityChecks) {
+        this.enforceActivityChecks = enforceActivityChecks;
+    }
+
+    public boolean isScheduleJob() {
+        return scheduleJob;
+    }
+
+    public void setScheduleJob(boolean scheduleJob) {
+        this.scheduleJob = scheduleJob;
     }
 }

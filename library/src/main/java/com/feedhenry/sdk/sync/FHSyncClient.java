@@ -23,12 +23,19 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
+
+import com.evernote.android.job.JobManager;
+import com.evernote.android.job.JobRequest;
 import com.feedhenry.sdk.FH;
 import com.feedhenry.sdk.FHActCallback;
 import com.feedhenry.sdk.api.FHActRequest;
 import com.feedhenry.sdk.exceptions.DataSetNotFound;
 import com.feedhenry.sdk.exceptions.FHNotReadyException;
+import com.feedhenry.sdk.sync.job.JobUtils;
+import com.feedhenry.sdk.sync.job.SyncJob;
 import com.feedhenry.sdk.utils.FHLog;
+
+import java.lang.reflect.Modifier;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,9 +51,10 @@ import org.json.fh.JSONObject;
 public class FHSyncClient implements Application.ActivityLifecycleCallbacks {
 
     private static final String TAG = "FHSyncClient";
+
     private static FHSyncClient mInstance;
 
-    protected static final String LOG_TAG = "com.feedhenry.sdk.sync.FHSyncClient";
+    protected static final String LOG_TAG = "FHSyncClient";
 
     private final Handler mHandler;
 
@@ -60,6 +68,7 @@ public class FHSyncClient implements Application.ActivityLifecycleCallbacks {
     private boolean mInitialised = false;
     private MonitorTask mMonitorTask = null;
 
+    private boolean enforceActivityChecks = false;
     /**
      * Gets the singleton instance of the sync client.
      *
@@ -96,6 +105,7 @@ public class FHSyncClient implements Application.ActivityLifecycleCallbacks {
         mConfig = pConfig;
         mSyncListener = pListener;
         initHandlers();
+        performActivityChecks(pContext, pConfig, pListener);
         mInitialised = true;
         if (null == mMonitorTask) {
             HandlerThread thread = new HandlerThread("monitor task");
@@ -107,9 +117,31 @@ public class FHSyncClient implements Application.ActivityLifecycleCallbacks {
     }
 
     /**
+     * Check if the Client is being started in an activity and, if so, enable the activity checks.
+     * Activity Checks are making sure that the application is properly handling the sync client.
+     *  @param pContext The app context
+     * @param pConfig
+     * @param pListener The sync listener
+     */
+    private void performActivityChecks(Context pContext, FHSyncConfig pConfig, FHSyncListener pListener) {
+        Class<? extends FHSyncListener> listenerClass = pListener.getClass();
+        Class<?> possibleOuterClass = listenerClass.getEnclosingClass();
+        if (pContext instanceof Activity) {
+            enforceActivityChecks = true;
+        } else if (possibleOuterClass != null && Activity.class.isAssignableFrom(possibleOuterClass)) {//Check for inner classes
+            enforceActivityChecks = true;
+        } else {
+            enforceActivityChecks = pConfig.isEnforceActivityChecks();
+        }
+    }
+
+    /**
      * Initializes the notification handlers.
      */
     private void initHandlers() {
+        if (mConfig.isScheduleJob()) {
+            unscheduleJob();
+        }
         if (null != Looper.myLooper()) {
             mNotificationHandler = new FHSyncNotificationHandler(this.mSyncListener);
         } else {
@@ -117,6 +149,20 @@ public class FHSyncClient implements Application.ActivityLifecycleCallbacks {
             ht.start();
             mNotificationHandler = new FHSyncNotificationHandler(ht.getLooper(), this.mSyncListener);
         }
+    }
+
+    private void unscheduleJob() {
+        int jobId = JobUtils.getSyncJobId(mContext);
+        JobManager.create(mContext).cancel(jobId);
+    }
+
+    private void scheduleJob() {
+        JobManager manager = JobManager.create(mContext);
+        int jobId = new JobRequest.Builder(SyncJob.JOB_TAG)
+                        .setRequiredNetworkType(JobRequest.NetworkType.ANY)
+                        .setPeriodic(15 * 60 * 1000 )
+                        .build().schedule();
+        JobUtils.setSyncJobId(jobId, mContext);
     }
 
     /**
@@ -329,7 +375,11 @@ public class FHSyncClient implements Application.ActivityLifecycleCallbacks {
         for (FHSyncDataset dataSet : mDataSets.values()) {
                 dataSet.stopSync(false);
         }
-        
+
+        if (mConfig.isScheduleJob()) {
+            unscheduleJob();
+        }
+
     }
     
 
@@ -342,8 +392,13 @@ public class FHSyncClient implements Application.ActivityLifecycleCallbacks {
         for (FHSyncDataset dataSet : mDataSets.values()) {
                 dataSet.stopSync(true);
         }
-        
+
         this.mSyncListener = null;
+
+        if (mConfig.isScheduleJob()) {
+            scheduleJob();
+        }
+
     }
     
     /**
