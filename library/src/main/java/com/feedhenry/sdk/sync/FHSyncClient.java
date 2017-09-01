@@ -24,8 +24,10 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
 
+import com.evernote.android.job.Job;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobRequest;
+import com.evernote.android.job.util.support.PersistableBundleCompat;
 import com.feedhenry.sdk.FH;
 import com.feedhenry.sdk.FHActCallback;
 import com.feedhenry.sdk.api.FHActRequest;
@@ -36,6 +38,7 @@ import com.feedhenry.sdk.sync.job.SyncJob;
 import com.feedhenry.sdk.utils.FHLog;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -158,9 +161,21 @@ public class FHSyncClient implements Application.ActivityLifecycleCallbacks {
 
     private void scheduleJob() {
         JobManager manager = JobManager.create(mContext);
+
+
+        PersistableBundleCompat extras = new PersistableBundleCompat();
+
+        for (FHSyncDataset dataset : mDataSets.values()) {
+            extras.putString(dataset.getDatasetId() + "_queryParams", dataset.getQueryParams().toString());
+            extras.putString(dataset.getDatasetId() + "_metadata", dataset.getMetaData().toString());
+        }
+
+        extras.putStringArray("datasets", new ArrayList<String>(mDataSets.keySet()).toArray(new String[]{}));
+
         int jobId = new JobRequest.Builder(SyncJob.JOB_TAG)
                         .setRequiredNetworkType(JobRequest.NetworkType.ANY)
                         .setPeriodic(15 * 60 * 1000 )
+                        .setExtras(extras)
                         .build().schedule();
         JobUtils.setSyncJobId(jobId, mContext);
     }
@@ -215,6 +230,7 @@ public class FHSyncClient implements Application.ActivityLifecycleCallbacks {
         } else {
             dataset
                     = new FHSyncDataset(mContext, mNotificationHandler, pDataId, syncConfig, pQueryParams, pMetaData);
+
             mDataSets.put(pDataId, dataset);
             dataset.setSyncRunning(false);
             dataset.setInitialised(true);

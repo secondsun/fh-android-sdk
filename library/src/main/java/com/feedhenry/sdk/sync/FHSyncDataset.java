@@ -1032,4 +1032,15 @@ public class FHSyncDataset {
         mNotificationHandler = pHandler;
     }
 
+    public JSONObject getQueryParams() {
+        return mQueryParams;
+    }
+
+    public JSONObject getMetaData() {
+        return mMetaData;
+    }
+
+    public String getDatasetId() {
+        return mDatasetId;
+    }
 }
