@@ -2,6 +2,7 @@ package com.feedhenry.sdk.sync.job;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.evernote.android.job.Job;
@@ -38,6 +39,7 @@ public class SyncJob extends Job {
     protected Result onRunJob(final Params params) {
 
         final CountDownLatch latch = new CountDownLatch(1);
+        Log.d("SYNC_JOB", "starting Sync");
         client = FHSyncClient.getInstance();
         /*
           We can not guarantee that the sync is happening while the app is running so we have to recall init.
@@ -86,6 +88,7 @@ public class SyncJob extends Job {
 
         try {
             latch.await();
+            Log.d("SYNC_JOB", "ending Sync");
         } catch (InterruptedException e) {
             //Log exception
         }
@@ -107,11 +110,13 @@ public class SyncJob extends Job {
         @Override
         public void onSyncStarted(NotificationMessage pMessage) {
             client.stop(pMessage.getDataId());
+            Log.d("SYNC_JOB", "Sync started for " + pMessage.getDataId() );
         }
 
         @Override
         public void onSyncCompleted(NotificationMessage pMessage) {
             dataSetIds.remove(pMessage.getDataId());
+            Log.d("SYNC_JOB", "Sync complete for " + pMessage.getDataId() );
             if (dataSetIds.isEmpty()) {
                 latch.countDown();
             }

@@ -44,8 +44,8 @@ android {
 }
 
 dependencies {
-    implementation 'com.loopj.android:android-async-http:1.4.9'
-    implementation 'com.evernote:android-job:1.2.0-alpha4'
+    api 'com.loopj.android:android-async-http:1.4.9'
+    api 'com.evernote:android-job:1.2.0-alpha4'
     api 'org.jboss.aerogear:aerogear-android-push:4.1.0'
 
     testImplementation 'junit:junit:4.12'
